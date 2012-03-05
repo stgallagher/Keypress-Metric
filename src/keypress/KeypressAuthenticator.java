@@ -304,7 +304,7 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     	else if(src == userIDField)
     	{
     		readEnrollment();
-    		
+    		displayArea.setText("");
     		userID = userIDField.getText();
     		displayArea.append(verifyUserIDuniqueOutput(verifyUserIDunique()));
     		displayArea.append("\n" + userIDLengthCheckOutput(userIDLengthCheck()));
