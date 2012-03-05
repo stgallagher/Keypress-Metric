@@ -1,4 +1,37 @@
+/*
+ Name: Steven Gallagher
+ 
+ CSC 470 C
+ 
+ Biometrics Programming Project #1
+ 
+ Biometric Keystroke Dynamics
+
+
+Contents:
+-------------
+I.    Imports
+II.   Constants, GUI Components, variables, data structures
+III.  GUI builders and submodules
+IV.   Key events
+V.    Actions - Button, Enrollment, Authentication
+VI.   Key Handling
+VII.  Verification and statistical analysis methods
+VIII. Report Generator
+IX.   File Handling
+X.    Main
+
+Instructions
+-------------
+Key flight time patterns are matched based up individual and total variance. The factor of these variances is determined by
+the setting of the INDIVIDUAL_THRESHOLD constant, at the beginning of the program. The total variance threshold is just a multiplied 
+version of INDIVIDUAL_THRESHOLD.
+------------------------------------------------------------------------------------------------------------------------------------------
+*/
+
 package keypress;
+
+// imports
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -27,8 +60,11 @@ import javax.swing.SwingUtilities;
 public class KeypressAuthenticator extends JFrame implements KeyListener, ActionListener
 
 {
+	// Constant
+	
 	private static final Integer INDIVIDUAL_THRESHOLD = 100;
 	
+	// GUI components
 	JTextArea displayArea = new JTextArea(5, 30);
 	JTextArea reportArea = new JTextArea();
 	
@@ -45,11 +81,13 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     JButton clearButton = new JButton("Clear");
     JButton mainMenuButton = new JButton("Main Menu");
     
+    // Primitives
     long time1 = -1000;
     long time2 = 0;
     int passwordSize;
     int totalThreshold;
     
+    // Strings
     String userID;
     String userIDAuth;
     String pass1;
@@ -61,6 +99,7 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     
     Integer totalFlightTime = new Integer(0);
     
+    // Data structures
     ArrayList<Integer> flightTimes = new ArrayList<Integer>();
     ArrayList<Integer> flightTimes1 = new ArrayList<Integer>();
     ArrayList<Integer> flightTimes2 = new ArrayList<Integer>();
@@ -83,10 +122,12 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     
     Integer difference = new Integer(0);
     
+    // Constructor
     public KeypressAuthenticator(String name) {
         super(name);
     }
     
+    // Main GUI build
     private static void mainMenu(KeypressAuthenticator frame) {
         //Create and set up the window.
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -100,12 +141,12 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
         frame.setVisible(true);
     }
     
+    
+    // GUI submodule builds
     private void buildMainMenu() {
         
         enrollButton.addActionListener(this);
-        
         authButton.addActionListener(this);
-        
         quitButton.addActionListener(this);
          
         getContentPane().add(enrollButton);
@@ -198,29 +239,25 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
         this.setSize(700, 400);
     }
 	
-	/** Handle the key typed event from the text field. */
+	// Key events
     
 	public void keyTyped(KeyEvent e) {
-        //displayInfo(e);
     }
-    
-	
-    /** Handle the key pressed event from the text field. */
    
 	public void keyPressed(KeyEvent e) {
         displayInfo(e);
     }
    
-    
-	/** Handle the key released event from the text field. */
     public void keyReleased(KeyEvent e) {
         displayInfo(e);
     }
      
-    /** Handle the button click. */
+    // Actions
     public void actionPerformed(ActionEvent e) {
         
     	Object src = e.getSource();
+    	
+    	// Button actions
     	if(src == enrollButton)
     	{
     		this.getContentPane().removeAll();
@@ -236,21 +273,16 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     	}
     	else if(src == quitButton)
     	{
-    		this.getContentPane().removeAll();
-    		this.buildReportGenerator();
-    		reportArea.setText("This is a test. This is only a test");
-    		this.setVisible(true);
+    		System.exit(0);
     	}
     	else if(src == clearButton)
     	{
-    		//Clear the text components.
     		displayArea.setText("");
     		userIDField.setText("");
     		password1.setText("");
     		password2.setText("");
     		password3.setText("");
     		
-    		//Return the focus to the typing area.
     		userIDField.requestFocusInWindow();
     	}
     	else if(src == mainMenuButton)
@@ -267,14 +299,14 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     		this.buildMainMenu();
     		this.setVisible(true);
     	}
+    	
+    	//Enrollment actions
     	else if(src == userIDField)
     	{
     		readEnrollment();
     		
-    		System.out.println(readEnrollmentFile.toString());
     		userID = userIDField.getText();
     		displayArea.append(verifyUserIDuniqueOutput(verifyUserIDunique()));
-    		System.out.println("User ID:" + userID);
     		displayArea.append("\n" + userIDLengthCheckOutput(userIDLengthCheck()));
     		flightTimes.clear();
     		userIDField.transferFocus();
@@ -286,8 +318,6 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     		flightTimes.remove(flightTimes.size() - 1);
     		flightTimes1 = flightTimes;
     		allFlightTimes.addAll(flightTimes1);
-    		System.out.println("Password1:" + pass1);
-    		System.out.println("Flight times for Password1:" + flightTimes1.toString());
     		totalFlightTime(flightTimes1);
     		flightTimes.clear();
     		password1.transferFocus();
@@ -300,8 +330,6 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     		flightTimes.remove(flightTimes.size() - 1);
     		flightTimes2 = flightTimes;
     		allFlightTimes.addAll(flightTimes2);
-    		System.out.println("Password2:" + pass2);
-    		System.out.println("Flight times for Password2:" + flightTimes2.toString());
     		totalFlightTime(flightTimes2);
     		flightTimes.clear();
     		password2.transferFocus();
@@ -322,13 +350,6 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     		totalFlightTime(flightTimes3);
     		
     		displayArea.append("\n" + verifyEnrollment());
-    		
-    		System.out.println("Password3:" + pass3);
-    		System.out.println("Flight times for allFlightTimes:" + allFlightTimes.toString());
-    		System.out.println("Variances for 1 and 2:" + variances12.toString());
-    		System.out.println("Variances for 2 and 3:" + variances23.toString());
-    		System.out.println("Variances for 1 and 3:" + variances13.toString());
-    		System.out.println("Total flight time:" + totalFlightTime);
     		
     		displayArea.append("\nIndividual variances 1 to 2 = " + variances12.toString());
     		displayArea.append("\nIndividual variances 2 to 3 = " + variances23.toString());
@@ -353,11 +374,12 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     		enrolledUsers.clear();
     		password3.transferFocus();
     	}
+    	
+    	// Authentication actions
     	else if(src == userIDAuthField)
     	{
     		readEnrollment();
     		userIDAuth = userIDAuthField.getText();
-    		System.out.println("User ID:" + userIDAuth);
     		displayArea.append(verifyUserIDexistsOutput(verifyUserIDexists()));
     		flightTimes.clear();
     		keyCaptureTimes.clear();
@@ -367,21 +389,13 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     	{
     		passAuth = passwordAuth.getText();
     		displayArea.append("\n" + passwordsMatchOutput(checkIfPasswordMatches(passAuth, loadedPassword)));
-    		System.out.println("loadedPassword:" + loadedPassword);
-    		System.out.println("PasswordAuth:" + passAuth);
     		flightTimes.remove(0);
     		flightTimes.remove(flightTimes.size() - 1);
     		keyCaptureTimes.set(0, (long) 0);
     		keyCaptureTimes.remove(keyCaptureTimes.size() - 1);
     		totalThreshold = INDIVIDUAL_THRESHOLD * passAuth.length();
-    		System.out.println("totalThreshold:" + totalThreshold);
     		authenticated = verifyAuthentication();
     		displayArea.append("\n" + authenticated);
-    		
-    		System.out.println("User password:" + passAuth);
-    		System.out.println("User actual flight times" + flightTimesAuth.toString());
-    		System.out.println("User loaded average flight times" + averageFlightTimesLoaded.toString());
-    		System.out.println("User flight time variances" + variancesAuth.toString());
     		
     		passwordAuth.transferFocus();
     		
@@ -399,13 +413,12 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     	}
     }
     
+    // Key event handling
 	private void displayInfo(KeyEvent e) {
         
         int id = e.getID();
         
         if (id == KeyEvent.KEY_TYPED) {
-            //char c = e.getKeyChar();
-            //keyString = "key character = '" + c + "'";
         } 
         
         if (id == KeyEvent.KEY_RELEASED) {
@@ -424,7 +437,9 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     	}
     }
     
-    public boolean verifyUserIDunique()
+    // Verification and statistical analysis methods
+	
+	public boolean verifyUserIDunique()
     {
     	for(int i =0; i < readEnrollmentFile.size(); i++)
     	{
@@ -479,7 +494,6 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     				loadedPassword = readEnrollmentFile.get(i + 2);
     				int passAuthSize = loadedPassword.length();
     				
-    				System.out.println("IN LOADUSERINFO: passAuthSize = " + passAuthSize);
     				for(int j = (i + 3); j < ((i + 3) + (passAuthSize - 1)); j++)
     				{
     					String valueString = readEnrollmentFile.get(j);
@@ -563,40 +577,30 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     {	
     	for(int i = 0; i < passwordSize; i++)
     	{
-    		//System.out.println("passwordSize = " + passwordSize);
-    		//System.out.println("qllFlightTimes.get(i):" + allFlightTimes.get(i));
-    		//System.out.println("qllFlightTimes.get(passwordSize + i):" + allFlightTimes.get(passwordSize + i));
     		int diff = Math.abs(allFlightTimes.get(i) - allFlightTimes.get(passwordSize + i));
     		variances12.add(diff);
-    		//System.out.println("Variances12:" + variances12.toString());
     	}
     	
     	for(int i = 0; i < passwordSize; i++)
     	{
     		int diff = Math.abs(allFlightTimes.get(i) - allFlightTimes.get((passwordSize * 2) + i));
     		variances13.add(diff);
-    		//System.out.println("Variances13:" + variances13.toString());
     	}
     	
     	for(int i = 0; i < passwordSize; i++)
     	{
     		int diff = Math.abs(allFlightTimes.get(passwordSize + i) - allFlightTimes.get((passwordSize * 2) + i));
     		variances23.add(diff);
-    		//System.out.println("Variances23:" + variances23.toString());
     	}
     }
     
     private void generateVariancesAuth()
     {
-    	System.out.println("flightTimesAuth:" + flightTimesAuth.toString());
-		System.out.println("averageFlightTimesLoaded = " + averageFlightTimesLoaded.toString());
-		
     	for(int i = 0; i < passAuth.length() - 1; i++)
     	{
     		int diff = Math.abs(flightTimesAuth.get(i) - averageFlightTimesLoaded.get(i));
     		variancesAuth.add(diff);
     	}
-    	System.out.println("VariancesAuth:" + variancesAuth.toString());
     }
     
     private void averageVariances()
@@ -614,7 +618,6 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     		avgDiff = (diff12 + diff23 + diff13)/3;
     		variancesAverage.add(avgDiff);
     	}
-    	System.out.println("Average variances : " + variancesAverage);
     }
     
     private void averageFlightTimes()
@@ -627,10 +630,8 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     		sum += allFlightTimes.get(passwordSize +i);
     		sum += allFlightTimes.get((passwordSize * 2) +i);
     		average = sum/3;
-    		System.out.println("Average = " + average);
     		flightTimesAverage.add((int) average);
     	}
-    	System.out.println("Average flight times: " + flightTimesAverage);
     }
     
     private int totalVariances()
@@ -798,6 +799,7 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     	}
     }
     
+    // Report generator
     private String generateReport()
     {
     	LinkedList<String> report = new LinkedList<String>();
@@ -805,25 +807,14 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     	report.add("------------------\n");
     	report.add("Correct Key      Key Pressed     Time Pressed      Correct Delta     Actual Delta    Variance     Accept/ Reject\n");
     	
-    	System.out.println("IN GENERATEREPORT: loadedPassword = " + loadedPassword);
-    	System.out.println("IN GENERATEREPORT: passAuth = " + passAuth);
-    	
+    	if(passAuth.equals(loadedPassword) != true)
+    	{
+    		return "CRITICAL ERROR: Your password must match the password in your profile!!";
+    	}
     	
     	char[] correctKeys = loadedPassword.toCharArray();
     	char[] keysPressed = passAuth.toCharArray();
     	
-    	System.out.println("IN GENERATEREPORT: correctKeys.length = " + correctKeys.length);
-    	System.out.println("IN GENERATEREPORT: keysPressed.length = " + keysPressed.length);
-    	
-    	System.out.println("IN GENERATEREPORT: keyCaptureTimes.size = " + keyCaptureTimes.size());
-    	System.out.println("IN GENERATEREPORT: averageFlightTimesLoaded.size = " + averageFlightTimesLoaded.size());
-    	System.out.println("IN GENERATEREPORT: flightTimesAuth.size = " + flightTimesAuth.size());
-    	System.out.println("IN GENERATEREPORT: variancesAuth.size = " + variancesAuth.size());
-    	
-    	if(correctKeys.length != keysPressed.length)
-    	{
-    		return "CRITICAL ERROR: Password lengths DO NOT match!!";
-    	}
     	for(int i = 0; i < correctKeys.length; i++)
     	{
     		report.add("     ");
@@ -895,12 +886,14 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     	{
     		result += "Authentication Succeeded!!!\n";
     		result += "You were in both the individual threshold of " + INDIVIDUAL_THRESHOLD + " and the total threshold of " + totalThreshold +"\n";
-    		result += "Individual variance was " + variancesAuth.toString() + "\n";
+    		result += "Individual variances were " + variancesAuth.toString() + "\n";
     		result += "Total variance was " + totalVarianceAuth() + "\n";
     	}
     	
     	return result;
     }
+    
+    // File handling methods
     
     private void readEnrollment()
     {
@@ -917,7 +910,7 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     			}
     			in.close();
     		}
-    		catch (Exception e){//Catch exception if any
+    		catch (Exception e){
     			System.err.println("Error: " + e.getMessage());
     		}
     	}
@@ -927,7 +920,6 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     {
     	{
     		try{
-    			// Create file 
     			FileWriter fstream = new FileWriter("template.txt", true);
     			BufferedWriter out = new BufferedWriter(fstream);
     			out.write("*****\n");
@@ -937,14 +929,14 @@ public class KeypressAuthenticator extends JFrame implements KeyListener, Action
     			{
     				out.write(time + "\n");
     			}
-    			//Close the output stream
     			out.close();
-    		}catch (Exception e){//Catch exception if any
+    		}catch (Exception e){
     			System.err.println("Error: " + e.getMessage());
     		}
     	}
     }
     
+    // Main method
     public static void main(String[] args) {
 		
 		SwingUtilities.invokeLater(new Runnable() {
